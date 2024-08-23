@@ -1,4 +1,5 @@
-import threading
+import eventlet
+eventlet.monkey_patch(thread=True, time=True)
 from random import randint
 from flask_socketio import SocketIO, emit, join_room
 from flask import Flask, render_template, request, url_for, redirect, session, jsonify
@@ -11,7 +12,7 @@ from snake import Snake, Board
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.sqlite3"
 app.config["SECRET_KEY"] = "OJASWA"
-socket = SocketIO(app)
+socket = SocketIO(app, async_mode="eventlet")
 db = SQLAlchemy(app)
 
 class User(db.Model):
