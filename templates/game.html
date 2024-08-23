@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            height: 100vh;
+            background: #1b1b1b;
+            color: #ffffff;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #game-board {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(30, 25px);
+            grid-template-rows: repeat(30, 25px);
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .grid-cell {
+            width: 26px;
+            height: 26px;
+            background-color: #151515;
+        }
+
+        .snake1 {
+            background-color: #3ABF21;
+            z-index: 200;
+        }
+
+        .snake2 {
+            background-color: #1E90FF;
+            z-index: 200;
+        }
+
+        .snake3 {
+            background-color: #DA70D6;
+            z-index: 200;
+        }
+
+        .snake4 {
+            background-color: #FFD700;
+            z-index: 200;
+        }
+
+        .fruit {
+            background-color: #FF4500;
+            z-index: 200;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .info, .lastdeath {
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .lastdeath {
+            color: #FF6347;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+        }
+        .invis{
+            display:none;
+        }
+    </style>
+</head>
+<body>
+    <div class="info">{{room}}</div>
+    <div class="lastdeath" id="last"></div>
+    <div class="container">
+        <div id="game-board"></div>
+    </div>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const gameBoard = document.getElementById("game-board");
+        document.getElementById("last").classList.add("invis")
+        for (let i = 0; i < 30; i++) {
+            for (let j = 0; j < 30; j++) {
+                const cell = document.createElement("div");
+                cell.className = "grid-cell";
+                cell.id = `${i},${j}`;
+                gameBoard.appendChild(cell);
+            }
+        }
+
+        document.addEventListener("keydown", function(event) {
+            let direction;
+            if (event.key === "ArrowUp") direction = "up";
+            else if (event.key === "ArrowDown") direction = "down";
+            else if (event.key === "ArrowLeft") direction = "left";
+            else if (event.key === "ArrowRight") direction = "right";
+
+            if (direction) socket.emit("move", { direction });
+        });
+
+        socket.on("update", function(data) {
+            const board = data.board;
+            for (let i = 0; i < 30; i++) {
+                for (let j = 0; j < 30; j++) {
+                    const cell = document.getElementById(`${i},${j}`);
+                    if (board[i][j] === null) {
+                        cell.className = "grid-cell";
+                    } else if (board[i][j] === 4) {
+                        cell.className = "grid-cell fruit";
+                    } else if (board[i][j] === 0) {
+                        cell.className = "grid-cell snake1";
+                    } else if (board[i][j] === 1) {
+                        cell.className = "grid-cell snake2";
+                    } else if (board[i][j] === 2) {
+                        cell.className = "grid-cell snake3";
+                    } else if (board[i][j] === 3) {
+                        cell.className = "grid-cell snake4";
+                    }
+                }
+            }
+        });
+
+        socket.on('death', function(data) {
+            document.getElementById('last').classList.remove('invis')
+            document.getElementById('last').innerHTML = "Player " + data.dead + " has died.";
+            const board = data.board;
+            for (let i = 0; i < 30; i++) {
+                for (let j = 0; j < 30; j++) {
+                    const cell = document.getElementById(`${i},${j}`);
+                    if (board[i][j] === null) {
+                        cell.className = "grid-cell";
+                    } else if (board[i][j] === 4) {
+                        cell.className = "grid-cell fruit";
+                    } else if (board[i][j] === 0) {
+                        cell.className = "grid-cell snake1";
+                    } else if (board[i][j] === 1) {
+                        cell.className = "grid-cell snake2";
+                    } else if (board[i][j] === 2) {
+                        cell.className = "grid-cell snake3";
+                    } else if (board[i][j] === 3) {
+                        cell.className = "grid-cell snake4";
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
